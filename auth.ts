@@ -37,7 +37,7 @@ export const config = {
           if (isMatch) {
             return {
               id: user.id,
-              name: user.email,
+              name: user.name,
               email: user.email,
               role: user.role,
             };
