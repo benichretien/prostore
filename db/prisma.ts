@@ -1,4 +1,4 @@
-import { Pool, PoolConfig, neonConfig } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import ws from "ws";
@@ -8,6 +8,10 @@ neonConfig.webSocketConstructor = ws;
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
+if (typeof window === "undefined") {
+  neonConfig.webSocketConstructor = ws;
+}
+
 // Creates a new connection pool using the provided connection string, allowing multiple concurrent connections.
 const pool = new Pool({ connectionString });
 
@@ -16,19 +20,25 @@ const pool = new Pool({ connectionString });
 const adapter = new PrismaNeon(pool as any);
 
 // Extends the PrismaClient with a custom result transformer to convert the price and rating fields to strings.
-export const prisma = new PrismaClient({ adapter }).$extends({
-  result: {
-    product: {
-      price: {
-        compute(product) {
-          return product.price.toString();
+// Attach to global to avoid hot reload issues (development mode)
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({ adapter }).$extends({
+    result: {
+      product: {
+        price: {
+          compute(product) {
+            return product.price.toString();
+          },
         },
-      },
-      rating: {
-        compute(product) {
-          return product.rating.toString();
+        rating: {
+          compute(product) {
+            return product.rating.toString();
+          },
         },
       },
     },
-  },
-});
+  });
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
