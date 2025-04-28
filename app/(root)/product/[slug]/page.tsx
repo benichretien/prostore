@@ -14,6 +14,7 @@ const ProductDetailsPage = async ({ params }: Props) => {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) notFound();
+
   return (
     <>
       <section>
@@ -30,7 +31,7 @@ const ProductDetailsPage = async ({ params }: Props) => {
               </p>
               <h1 className="font-bold text-xl lg:text-2xl">{product.name}</h1>
               <p>
-                {product.rating} of {product.numReviews} Reviews
+                {product.rating.toString()} of {product.numReviews} Reviews
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <ProductPrice
@@ -69,7 +70,7 @@ const ProductDetailsPage = async ({ params }: Props) => {
                         productId: product.id,
                         name: product.name,
                         slug: product.slug,
-                        price: product.price,
+                        price: product.price.toString(),
                         qty: 1,
                         image: product.images![0],
                       }}
